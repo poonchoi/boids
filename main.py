@@ -57,7 +57,7 @@ import numpy
 # pygame initialize
 pygame.init()
 
-dimensions = (1920,1080)
+dimensions = (500,500)
 width = dimensions[0]//2
 height = dimensions[1]//2
 
@@ -67,7 +67,6 @@ fps = 75
 
 screen.fill((0,0,0))
 
-
 run = True
 
 while run:
@@ -75,6 +74,7 @@ while run:
     for i in pygame.event.get():
         if i.type == pygame.QUIT:
             run = False
-    pygame.draw.circle(screen, (255,255,255), (400,500), 7)
+
+    pygame.draw.circle(screen, (255,255,255), width, height, 7)
 
 pygame.quit()
