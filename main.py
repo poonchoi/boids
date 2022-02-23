@@ -75,6 +75,6 @@ while run:
         if i.type == pygame.QUIT:
             run = False
 
-    pygame.draw.circle(screen, (255,255,255), width, height, 7)
+    pygame.draw.circle(screen, (255,255,255), (10,10), 7)
 
 pygame.quit()
