@@ -44,17 +44,17 @@ class boid():
         y = self.position[1]
         coords = (x, y)
         pygame.draw.circle(screen, self.color, coords, self.size)
-        pygame.display.update()
 
 
 def spawn():
-    x = random.randint(0, width)
-    y = random.randint(0, height)
-    vx = random.randint(-5, 5)
-    vy = random.randint(-5, 5)
+    vels = [5, 4, 3, 2, 1, -1, -2, -3, -4, -5]
+    x = random.randint(1, width-1)
+    y = random.randint(1, height-1)
+    vx = random.choice(vels)
+    vy = random.choice(vels)
     return x, y, vx, vy
 
-population = 10
+population = 1000
 
 p = [boid([random.randint(0,width),random.randint(0,height)],[random.randint(-2,2),random.randint(-2,2)],7,(255,255,255)) for i in range(population)]
 
@@ -71,3 +71,4 @@ while run:
         i.check_collision()
         i.move()
         i.draw()
+    pygame.display.update()
