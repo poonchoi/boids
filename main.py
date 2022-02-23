@@ -1,7 +1,4 @@
-from math import radians
-from tkinter import W, Y
 import pygame
-import numpy
 import random
 
 # pygame initialize
