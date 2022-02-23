@@ -1,4 +1,5 @@
 import pygame
+from pygame.locals import *
 import numpy
 
 # # pygame initialize
@@ -57,7 +58,7 @@ import numpy
 # pygame initialize
 pygame.init()
 
-dimensions = (500,500)
+dimensions = 500,500
 width = dimensions[0]//2
 height = dimensions[1]//2
 
@@ -65,9 +66,13 @@ screen = pygame.display.set_mode(dimensions)
 clock = pygame.time.Clock()
 fps = 75
 
-screen.fill((0,0,0))
+screen.fill(255)
 
 run = True
+
+color = (255,255,255)
+coords = width, height
+size = 5
 
 while run:
     clock.tick(fps)
@@ -75,6 +80,7 @@ while run:
         if i.type == pygame.QUIT:
             run = False
 
-    pygame.draw.circle(screen, (255,255,255), width, height, 7)
+    pygame.draw.circle(screen, color, coords, size)
+    pygame.display.update()
 
 pygame.quit()
