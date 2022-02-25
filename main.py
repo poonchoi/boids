@@ -1,10 +1,7 @@
-from cv2 import compare
 import pygame
 import random
 import ctypes
 import math
-
-from pyparsing import White
 
 # pygame initialize
 pygame.init()
