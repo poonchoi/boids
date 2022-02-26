@@ -5,9 +5,10 @@ import math
 import numpy as np
 
 ##GLOBALS##
-vision = 50
+VISION = 50
 population = 100
-
+boidsize = 3
+MAX_SPEED = 5
 ###########
 
 ##colors##
@@ -47,11 +48,8 @@ class Boid:
         return getattr(self, item)
 
     def move(self):
-        # print(self.position, self.velocity, self.acceleration)
         self.position += self.velocity + self.acceleration
-        # print(self.position)
         self.acceleration = np.array([0, 0], dtype=float)
-        # print(self.acceleration)
 
     def draw(self):
         pygame.draw.circle(screen, self.color, self.position, self.diameter)
@@ -77,35 +75,54 @@ class Boid:
 
     def alignment(self, all_boids):
         currentpos = self.position
-        currentvel = self.velocity
         desiredvels = np.empty((0, 2))
         for i in all_boids:
             otherpos = i["position"]
             othervel = i["velocity"]
             mag = math.dist(currentpos, otherpos)
 
-            if mag <= vision and not (np.array_equal(currentpos, otherpos)):
-                # pygame.draw.line(screen, green, currentpos, otherpos, 1)
+            if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
                 desiredvels = np.append(desiredvels, othervel)
 
         if len(desiredvels) > 2:
             desiredvels = np.reshape(desiredvels, (len(desiredvels) // 2, 2))
             avg = np.average(desiredvels, axis=0)
+            avg *= MAX_SPEED / np.linalg.norm(avg)
             self.acceleration = avg - self.velocity
         elif len(desiredvels) == 2:
             avg = desiredvels
+            avg *= MAX_SPEED / np.linalg.norm(avg)
             self.acceleration = avg - self.velocity
         else:
             avg = np.array([0, 0], dtype=float)
             self.acceleration = avg
 
-        # print(self.acceleration, avg, self.velocity)
+    def separation(self):
+        pass
 
-        def separation(self):
-            pass
+    def cohesion(self, all_boids):
+        currentpos = self.position
+        desiredposs = np.empty((0, 2))
+        for i in all_boids:
+            otherpos = i["position"]
+            mag = math.dist(currentpos, otherpos)
+            if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
+                desiredposs = np.append(desiredposs, otherpos)
 
-        def cohesion(self):
-            pass
+        if len(desiredposs) > 2:
+            desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
+            avg = np.average(desiredposs, axis=0)
+            avg *= MAX_SPEED / np.linalg.norm(avg)
+            mag = math.dist(avg, self.position)
+            self.acceleration = -avg
+        elif len(desiredposs) == 2:
+            avg = desiredposs
+            avg *= MAX_SPEED / np.linalg.norm(avg)
+            mag = math.dist(avg, self.position)
+            self.acceleration = -avg
+        else:
+            avg = np.array([0, 0], dtype=float)
+            self.acceleration = -avg
 
 
 def spawn():
@@ -129,8 +146,8 @@ def startvel():
 
 
 def main():
-    boidsize = 5
-    p = [Boid(spawn(), startvel(), boidsize, white) for i in range(population)]
+
+    p = [Boid(spawn(), startvel(), boidsize, green) for i in range(population)]
 
     run = True
 
@@ -145,6 +162,7 @@ def main():
             p[i].wall_check()
             p[i].move()
             p[i].alignment(p)
+            p[i].cohesion(p)
             p[i].draw()
 
         pygame.display.update()
