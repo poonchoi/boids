@@ -1,11 +1,25 @@
-from cmath import nan
 import pygame
 import random
 import ctypes
 import math
 import numpy as np
 
-# pygame initialize
+##GLOBALS##
+VISION = 50
+population = 100
+boidsize = 3
+MAX_SPEED = 5
+###########
+
+##COLORS##
+red = (255, 0, 0)
+green = (0, 255, 0)
+blue = (0, 0, 255)
+white = (255, 255, 255)
+black = (0, 0, 0)
+##########
+
+##PYGAME INIT##
 pygame.init()
 
 user32 = ctypes.windll.user32
@@ -17,83 +31,105 @@ screen = pygame.display.set_mode(dimensions)
 clock = pygame.time.Clock()
 fps = 60
 
-screen.fill((0, 0, 0))
-
-##colors##
-red = (255, 0, 0)
-green = (0, 255, 0)
-blue = (0, 0, 255)
-white = (255, 255, 255)
-black = (0, 0, 0)
-##########
+screen.fill(black)
+###############
 
 
-class boid:
-    def __init__(self, position, velocity, acceleration, size, color):
-        self.position = np.array(position)
-        self.velocity = np.array(velocity)
-        self.size = size
+class Boid:
+    def __init__(self, position, velocity, diameter, color):
+        self.position = np.array(position, dtype=float)
+        self.velocity = np.array(velocity, dtype=float)
+        self.acceleration = np.array([0, 0], dtype=float)
+        self.diameter = diameter
+        self.radius = diameter // 2
         self.color = color
-        self.radius = self.size // 2
-        self.acceleration = np.array(acceleration)
-        self.maxmag = 5
 
     def __getitem__(self, item):
         return getattr(self, item)
 
     def move(self):
-        self.velocity += self.acceleration
-        self.position += self.velocity
-        self.acceleration = np.array([0, 0])
-
-    def check_wall_collision(self):
-        xpos = self.position[0]
-        ypos = self.position[1]
-        radius = self.size // 2
-
-        if xpos < 0 + radius:
-            xpos = width - radius
-        if xpos > width - radius:
-            xpos = 0 + radius
-        if ypos < 0 + radius:
-            ypos = height - radius
-        if ypos > height - radius:
-            ypos = 0 + radius
-
-        self.position = np.array([xpos, ypos])
+        self.position += self.velocity + self.acceleration
+        self.acceleration = np.array([0, 0], dtype=float)
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, self.position, self.size)
+        pygame.draw.circle(screen, self.color, self.position, self.diameter)
 
-    def align(self, all_boids):
-        currentboid = self.position
-        neighbourvel = np.array([])
+    def wall_check(self):
+        xpos = self.position[0]
+        ypos = self.position[1]
+        leftb = 0 + self.radius
+        rightb = width - self.radius
+        topb = 0 + self.radius
+        botb = height - self.radius
 
+        if xpos <= leftb:
+            xpos = rightb
+        elif xpos >= rightb:
+            xpos = leftb
+        if ypos <= topb:
+            ypos = botb
+        elif ypos >= botb:
+            ypos = topb
+
+        self.position = np.array([xpos, ypos], dtype=float)
+
+    def alignment(self, all_boids):
+        currentpos = self.position
+        desiredvels = np.empty((0, 2))
         for i in all_boids:
-            compareboid = i["position"]
-            mag = math.dist(currentboid, compareboid)
+            otherpos = i["position"]
+            othervel = i["velocity"]
+            mag = math.dist(currentpos, otherpos)
 
-            if mag < 50 and np.array_equal(currentboid, compareboid) == False:
-                pygame.draw.line(screen, white, currentboid, compareboid, 2)
-                temp = neighbourvel
-                neighbourvel = np.append(temp, i["velocity"], axis=0)
+            if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
+                desiredvels = np.append(desiredvels, othervel)
+                pygame.draw.line(screen, white, currentpos, otherpos, 1)
 
-        desired = np.reshape(neighbourvel, (len(neighbourvel) // 2, 2))
-        desired = np.mean(desired, axis=0, dtype=np.int32)
-        mag = np.linalg.norm(desired)
+        if len(desiredvels) > 2:
+            desiredvels = np.reshape(desiredvels, (len(desiredvels) // 2, 2))
+            avg = np.average(desiredvels, axis=0)
+            avg *= MAX_SPEED / np.linalg.norm(avg)
+            self.acceleration = avg - self.velocity
+        elif len(desiredvels) == 2:
+            avg = desiredvels
+            avg *= MAX_SPEED / np.linalg.norm(avg)
+            self.acceleration = avg - self.velocity
+        else:
+            avg = np.array([0, 0], dtype=float)
+            self.acceleration = avg
 
-        print(desired, desired * np.around(self.maxmag / mag, 0))
+    def separation(self):
+        pass
 
-        if desired[0] != nan or desired[1] != nan:
-            desired *= np.around(self.maxmag / mag, 0)
+    def cohesion(self, all_boids):
+        currentpos = self.position
+        desiredposs = np.empty((0, 2))
+        for i in all_boids:
+            otherpos = i["position"]
+            mag = math.dist(currentpos, otherpos)
+            if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
+                desiredposs = np.append(desiredposs, otherpos)
 
-        # self.acceleration = desired.astype(np.int32) - self.velocity
+        if len(desiredposs) > 2:
+            desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
+            avg = np.average(desiredposs, axis=0)
+            avg *= MAX_SPEED / np.linalg.norm(avg)
+            mag = math.dist(avg, self.position)
+            self.acceleration = -avg
+        elif len(desiredposs) == 2:
+            avg = desiredposs
+            avg *= MAX_SPEED / np.linalg.norm(avg)
+            mag = math.dist(avg, self.position)
+            self.acceleration = -avg
+        else:
+            avg = np.array([0, 0], dtype=float)
+            self.acceleration = -avg
 
 
 def spawn():
     x = random.randint(20, width - 20)
     y = random.randint(20, height - 20)
-    return np.array([x, y])
+    return np.array([x, y], dtype=float)
 
 
 def startvel():
@@ -107,26 +143,31 @@ def startvel():
 
     vx = random.choice(vels)
     vy = random.choice(vels)
-    return np.array([vx, vy])
+    return np.array([vx, vy], dtype=float)
 
 
-population = 50
+def main():
 
-p = [boid(spawn(), startvel(), [0, 0], 5, red) for i in range(population)]
+    p = [Boid(spawn(), startvel(), boidsize, green) for i in range(population)]
 
-run = True
+    run = True
 
-while run:
-    clock.tick(fps)
-    for i in pygame.event.get():
-        if i.type == pygame.QUIT:
-            run = False
-    screen.fill((0, 0, 0))
+    while run:
+        clock.tick(fps)
+        for i in pygame.event.get():
+            if i.type == pygame.QUIT:
+                run = False
+        screen.fill(black)
 
-    for i in range(len(p)):
-        p[i].check_wall_collision()
-        p[i].move()
-        p[i].align(p)
-        p[i].draw()
+        for i in range(len(p)):
+            p[i].wall_check()
+            p[i].move()
+            p[i].alignment(p)
+            # p[i].cohesion(p)
+            p[i].draw()
 
-    pygame.display.update()
+        pygame.display.update()
+
+
+if __name__ == "__main__":
+    main()
