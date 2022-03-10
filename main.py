@@ -9,6 +9,7 @@ VISION = 50
 population = 100
 boidsize = 3
 MAX_SPEED = 5
+MAX_C_SPEED = 5
 ###########
 
 ##COLORS##
@@ -23,7 +24,8 @@ black = (0, 0, 0)
 pygame.init()
 
 user32 = ctypes.windll.user32
-dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+# dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+dimensions = (600, 600)
 width = dimensions[0]
 height = dimensions[1]
 
@@ -83,7 +85,7 @@ class Boid:
 
             if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
                 desiredvels = np.append(desiredvels, othervel)
-                pygame.draw.line(screen, white, currentpos, otherpos, 1)
+                # pygame.draw.line(screen, white, currentpos, otherpos, 1)
 
         if len(desiredvels) > 2:
             desiredvels = np.reshape(desiredvels, (len(desiredvels) // 2, 2))
@@ -110,20 +112,15 @@ class Boid:
             if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
                 desiredposs = np.append(desiredposs, otherpos)
 
-        if len(desiredposs) > 2:
-            desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
-            avg = np.average(desiredposs, axis=0)
-            avg *= MAX_SPEED / np.linalg.norm(avg)
-            mag = math.dist(avg, self.position)
-            self.acceleration = -avg
-        elif len(desiredposs) == 2:
-            avg = desiredposs
-            avg *= MAX_SPEED / np.linalg.norm(avg)
-            mag = math.dist(avg, self.position)
-            self.acceleration = -avg
-        else:
-            avg = np.array([0, 0], dtype=float)
-            self.acceleration = -avg
+        desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
+        avg = np.average(desiredposs, axis=0)
+
+        avg *= MAX_C_SPEED / np.linalg.norm(avg)
+
+        if not (np.any(np.isnan(avg)) == True):
+            self.acceleration = avg - self.velocity
+
+        # print(len(all_boids), self.acceleration)
 
 
 def spawn():
@@ -163,7 +160,7 @@ def main():
             p[i].wall_check()
             p[i].move()
             p[i].alignment(p)
-            # p[i].cohesion(p)
+            p[i].cohesion(p)
             p[i].draw()
 
         pygame.display.update()
