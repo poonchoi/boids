@@ -9,6 +9,7 @@ VISION = 50
 population = 100
 boidsize = 3
 MAX_SPEED = 5
+MAX_C_SPEED = 1
 ###########
 
 ##COLORS##
@@ -23,7 +24,8 @@ black = (0, 0, 0)
 pygame.init()
 
 user32 = ctypes.windll.user32
-dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+# dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+dimensions = (600, 600)
 width = dimensions[0]
 height = dimensions[1]
 
@@ -83,7 +85,7 @@ class Boid:
 
             if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
                 desiredvels = np.append(desiredvels, othervel)
-                pygame.draw.line(screen, white, currentpos, otherpos, 1)
+                # pygame.draw.line(screen, white, currentpos, otherpos, 1)
 
         if len(desiredvels) > 2:
             desiredvels = np.reshape(desiredvels, (len(desiredvels) // 2, 2))
@@ -112,6 +114,16 @@ class Boid:
 
         desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
         avg = np.average(desiredposs, axis=0)
+
+        # avg *= MAX_C_SPEED / np.linalg.norm(avg)
+        avg -= self.position
+        avg /= np.linalg.norm(avg) * MAX_C_SPEED
+
+        if not (np.any(np.isnan(avg)) == True):
+
+            self.acceleration = avg - self.velocity
+
+        # print(len(all_boids), self.acceleration)
 
 
 def spawn():
