@@ -5,11 +5,12 @@ import math
 import numpy as np
 
 ##GLOBALS##
-VISION = 50
-population = 100
+VISION = 30
+population = 150
 boidsize = 3
-MAX_SPEED = 5
-MAX_C_SPEED = 5
+MAX_SPEED = 6
+MAX_C_SPEED = 2
+MAX_S_SPEED = 1
 ###########
 
 ##COLORS##
@@ -24,14 +25,14 @@ black = (0, 0, 0)
 pygame.init()
 
 user32 = ctypes.windll.user32
-# dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
-dimensions = (600, 600)
+dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+# dimensions = (600, 600)
 width = dimensions[0]
 height = dimensions[1]
 
 screen = pygame.display.set_mode(dimensions)
 clock = pygame.time.Clock()
-fps = 60
+fps = 30
 
 screen.fill(black)
 ###############
@@ -100,8 +101,27 @@ class Boid:
             avg = np.array([0, 0], dtype=float)
             self.acceleration = avg
 
-    def separation(self):
-        pass
+    def separation(self, all_boids):
+        currentpos = self.position
+        desiredposs = np.empty((0, 2))
+        for i in all_boids:
+            otherpos = i["position"]
+            mag = math.dist(currentpos, otherpos)
+            if mag <= VISION and not (np.array_equal(currentpos, otherpos)):
+                desiredposs = np.append(desiredposs, otherpos)
+
+        desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
+        avg = np.average(desiredposs, axis=0)
+
+        avg -= self.position
+        # avg /= np.linalg.norm(avg) * MAX_C_SPEED
+        avg *= MAX_S_SPEED / np.linalg.norm(avg)
+
+        if not (np.any(np.isnan(avg)) == True):
+
+            self.acceleration = (avg * -1) - self.velocity
+
+        # print(len(all_boids), self.acceleration)
 
     def cohesion(self, all_boids):
         currentpos = self.position
@@ -115,9 +135,12 @@ class Boid:
         desiredposs = np.reshape(desiredposs, (len(desiredposs) // 2, 2))
         avg = np.average(desiredposs, axis=0)
 
+        avg -= self.position
+        # avg /= np.linalg.norm(avg) * MAX_C_SPEED
         avg *= MAX_C_SPEED / np.linalg.norm(avg)
 
         if not (np.any(np.isnan(avg)) == True):
+
             self.acceleration = avg - self.velocity
 
         # print(len(all_boids), self.acceleration)
@@ -160,7 +183,8 @@ def main():
             p[i].wall_check()
             p[i].move()
             p[i].alignment(p)
-            p[i].cohesion(p)
+            # p[i].cohesion(p)
+            # p[i].separation(p)
             p[i].draw()
 
         pygame.display.update()
