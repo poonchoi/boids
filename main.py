@@ -6,10 +6,10 @@ import numpy as np
 
 ##GLOBALS##
 VISION = 30
-population = 150
+population = 50
 boidsize = 3
 MAX_SPEED = 6
-MAX_C_SPEED = 2
+MAX_C_SPEED = 1
 MAX_S_SPEED = 1
 ###########
 
@@ -26,7 +26,7 @@ pygame.init()
 
 user32 = ctypes.windll.user32
 dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
-# dimensions = (600, 600)
+dimensions = (600, 600)
 width = dimensions[0]
 height = dimensions[1]
 
