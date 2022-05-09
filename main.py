@@ -9,8 +9,8 @@ VISION = 30
 population = 50
 boidsize = 3
 MAX_SPEED = 6
-MAX_C_SPEED = 1
-MAX_S_SPEED = 1
+MAX_C_SPEED = 0.1
+MAX_S_SPEED = 0.3
 ###########
 
 ##COLORS##
@@ -182,9 +182,9 @@ def main():
         for i in range(len(p)):
             p[i].wall_check()
             p[i].move()
-            p[i].alignment(p)
             # p[i].cohesion(p)
-            # p[i].separation(p)
+            p[i].separation(p)
+            p[i].alignment(p)
             p[i].draw()
 
         pygame.display.update()
