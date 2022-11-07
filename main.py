@@ -6,7 +6,7 @@ import numpy as np
 
 ##GLOBALS##
 VISION = 30
-population = 50
+population = 100
 boidsize = 3
 MAX_SPEED = 6
 MAX_C_SPEED = 0.1
