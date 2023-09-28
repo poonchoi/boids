@@ -1,6 +1,5 @@
 import pygame
 import random
-import ctypes
 import math
 import numpy as np
 
@@ -24,8 +23,6 @@ black = (0, 0, 0)
 ##PYGAME INIT##
 pygame.init()
 
-user32 = ctypes.windll.user32
-dimensions = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
 dimensions = (600, 600)
 width = dimensions[0]
 height = dimensions[1]
